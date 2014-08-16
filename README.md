@@ -14,9 +14,9 @@ Default behaviour to note:
     collisions on output. An existing file of the same name will be overwritten.
 
 ToDo:
-  More error checking on passed/read arguments
-  More error checking in general, honestly
-  Fancier date range options.
-  Better type handling
-  Custom week start day
+  - More error checking on passed/read arguments
+  - More error checking in general, honestly
+  - Fancier date range options.
+  - Better type handling
+  - Custom week start day
   
