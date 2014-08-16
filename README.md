@@ -7,7 +7,7 @@ Usage: python adnpostsvisualizer.py <options>
 
 Default behaviour to note: 
   Attempts to use a local file for caching data (can be overridden with --nocache).
-    This defaults to <userid>cache.json (can be changed with --cachefile) and will be created if it does not exist.
+    This defaults to USERIDcache.json (can be changed with --cachefile) and will be created if it does not exist.
     If the cachefile does exist, it will be read in, parsed, and then clobbered with new data (regardless of success
     of parsing).
   Default output file is postscalendar.png (can be changed with --filename). This does not check for filename
