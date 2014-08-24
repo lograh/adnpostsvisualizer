@@ -95,12 +95,17 @@ argparser.add_argument('-lc', '--legendtextcolour', nargs='?', metavar='string',
 argparser.add_argument('-nf', '--namefontfile', nargs='?', metavar='string', default='default', help='fontfile for the name text (defaults to monthfontfile, "none" to turn off name)')
 argparser.add_argument('-nc', '--nametextcolour', nargs='?', metavar='string', default='default', help='colour for name text (defaults to monthtextcolour')
 argparser.add_argument('-npts', '--nametextpoints', type=not_negative, nargs='?', metavar='Num', default='12', help='point size for the name text (defaults to 12)')
+argparser.add_argument('-nptf', '--nametextfudge', type=not_negative, nargs='?', metavar='Num', default='0', help='some text types just need extra padding for ascend/descenders')
+argparser.add_argument('-lptf', '--legendtextfudge', type=not_negative, nargs='?', metavar='Num', default='0', help='some text types just need extra padding for ascend/descenders')
+argparser.add_argument('-mptf', '--monthtextfudge', type=not_negative, nargs='?', metavar='Num', default='0', help='some text types just need extra padding for ascend/descenders')
 argparser.add_argument('-no', '--noposts', nargs='?', metavar='string', default='#fcf6f4', help='colour for days without any posts')
 argparser.add_argument('-gd', '--gradients', type=not_negative, metavar='Num', nargs='?', default='5', help='how many steps of colour')
 argparser.add_argument('-gt', '--gradienttype', nargs='?', metavar='string', default='linear', help='style of gradient calculation (may override --gradients)')
 argparser.add_argument('-min', '--minshade', nargs='?', metavar='"#rrggbb"', default='#f0ccc6', help='colour for days with min posts')
 argparser.add_argument('-max', '--maxshade', nargs='?', metavar='"#rrggbb"', default='#cc5139', help='colour for days with max posts')
 argparser.add_argument('--shades', nargs='?', metavar='list', default='default', help='list of the colours (in order) to use for days with posts')
+argparser.add_argument('--halign', nargs='?', metavar='string', default='default', help='horizontal alignment on canvas')
+argparser.add_argument('--valign', nargs='?', metavar='string', default='default', help='vertical alignment on canvas')
 argparser.add_argument('-mo', '--monthseparator', nargs='?', metavar='string', default='default', help='colour for bars between months (defaults to boundaryshade)')
 argparser.add_argument('-v1', '--verbose',  help='verbose output (not read from argfile)', action="store_true")
 argparser.add_argument('-v0', '--lessverbose',  help='less verbose output (not read from argfile)', action="store_true")
@@ -165,7 +170,7 @@ if args.argfile != 'default' :
       except : 1
       else : args.boundaryshade = tmpargs.boundaryshade
     if args.monthfontfile =='none'  :
-      try : tmpargs.monthfile
+      try : tmpargs.monthfontfile
       except : 1
       else : args.monthfontfile = tmpargs.monthfontfile
     if args.legendfontfile =='default'  :
@@ -240,6 +245,26 @@ if args.argfile != 'default' :
       try : tmpargs.cachefile
       except : 1
       else :  args.cachefile = tmpargs.cachefile
+    if args.nametextfudge ==0 :
+      try : tmpargs.nametextfudge
+      except : 1
+      else :args.nametextfudge = tmpargs.nametextfudge 
+    if args.legendtextfudge ==0 :
+      try : tmpargs.legendtextfudge
+      except : 1
+      else :args.legendtextfudge = tmpargs.legendtextfudge
+    if args.monthtextfudge ==0 :
+      try : tmpargs.monthtextfudge
+      except : 1
+      else :args.monthtextfudge = tmpargs.monthtextfudge
+    if args.valign == 'default' :
+      try : tmpargs.valign
+      except : 1
+      else :args.valign = tmpargs.valign
+    if args.halign == 'default' :
+      try : tmpargs.halign
+      except : 1
+      else :args.halign = tmpargs.halign
   if args.verbose or args.lessverbose :
     print('************************ writing out argfile')
   f = open(args.argfile, 'w+b')
@@ -472,7 +497,10 @@ for x in timestamps :
   if args.verbose :
     print(x)
   stars.append(x['num_stars'])
-maxstars = max(stars)
+if len(stars) != 0 :
+  maxstars = max(stars)
+else :
+  maxstars = 0
 
 ################################### now build a chart based on what we got
 if args.verbose or args.lessverbose :
@@ -480,15 +508,19 @@ if args.verbose or args.lessverbose :
 
 workingweek = 0
 workingday = 0
+vspace = 0
+hspace = 0
 
 ###### set up the image canvas
 if nolegends == False :
   legendfont = ImageFont.truetype(args.legendfontfile, args.legendtextpoints)
   legendtext = 'Max Posts/Day : ' + str(maxposts) + ' | Min Posts/Day : ' + str(minposts) + ' | Max stars : ' + str(maxstars)
   legendtxtsize = legendfont.getsize(legendtext)
-  legendheight = legendtxtsize[1] + 2*args.boundary
+  legendheight = legendtxtsize[1] + 2*args.boundary + args.legendtextfudge
   if args.chartwidth < legendtxtsize[0] + 2*args.boundary :
     args.chartwidth = legendtxtsize[0] + 2*args.boundary
+  else :
+    hspace = args.chartwidth - legendtxtsize[0] - 2*args.boundary
 else :
   legendtxtsize = [0,0]
   legendheight = 0
@@ -497,7 +529,7 @@ if nomonths == False :
   monthfont = ImageFont.truetype(args.monthfontfile, args.monthtextpoints)
   monthname = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890'
   monthnamesize = monthfont.getsize(monthname)
-  monthheight = monthnamesize[1] + 2*args.boundary
+  monthheight = monthnamesize[1] + 2*args.boundary + args.monthtextfudge
 else :
   monthnamesize = [0,0]
   monthheight = 0
@@ -507,12 +539,15 @@ if noname == False :
   usernametext = '@' + timestamps[-1]['user']['username']
   usernamesize = usernamefont.getsize(usernametext)
   usernameheight = usernamesize[0]+2*args.boundary     # intentionally using the 'wrong' ones, this gets flipped
-  usernamewidth = usernamesize[1]+2*args.boundary
+  usernamewidth = usernamesize[1]+2*args.boundary + args.nametextfudge
 else :
   usernameheight = 0
   usernamewidth = 0
 
-weekwidth = (args.chartwidth-usernamewidth) / args.desiredweeks
+if args.halign == 'default' :
+  weekwidth = (args.chartwidth-usernamewidth) / args.desiredweeks
+elif args.halign == 'center' :
+   weekwidth = (args.chartwidth-2*usernamewidth) / args.desiredweeks
 
 if args.verbose or args.lessverbose :
   print('weekwidth calculated as ' + str(weekwidth) + ' = (' + str(args.chartwidth) + '-' + str(usernamewidth) +') /' + str(args.desiredweeks)  )
@@ -521,9 +556,18 @@ if args.verbose :
   print('adjusting heights')
 
 if str(args.chartheight) != 'default' :
-  calculatedheight = (args.daywidth*7)+legendheight+monthheight
+  if args.valign == 'center' :
+    largetext = max([legendheight,monthheight])
+    calculatedheight = (args.daywidth*7)+2*largetext
+    blocksorigin = [usernamewidth,largetext]
+  elif args.valign == 'default' :
+    calculatedheight = (args.daywidth*7)+legendheight+monthheight
+    blocksorigin = [usernamewidth,monthheight]
   if args.chartheight < calculatedheight :
-    weekheight = args.chartheight - legendheight - monthheight
+    if args.valign == 'center' :
+      weekheight = args.chartheight - 2*largetext
+    elif args.valign == 'default' :
+      weekheight = args.chartheight - legendheight - monthheight
     if weekheight/7 <= 1 :
       args.daywidth = 1
     else :
@@ -531,16 +575,25 @@ if str(args.chartheight) != 'default' :
   if args.verbose :
     print('daywidth is now ' + str(args.daywidth))
 else :
-  args.chartheight = (args.daywidth*7)+legendheight+monthheight
+  if args.valign == 'center' :
+    largetext = max([legendheight,monthheight])
+    args.chartheight = (args.daywidth*7)+2*largetext
+    blocksorigin = [usernamewidth,largetext]
+  else :
+    args.chartheight = (args.daywidth*7)+legendheight+monthheight
+    blocksorigin = [usernamewidth,monthheight]
 
 if usernameheight != 0 and args.chartheight < usernameheight :
   args.chartheight = usernameheight
+  if args.valign == 'center' :
+    blocksorigin = args.chartheight-largetext
 
 
 chartimage = Image.new("RGB",(args.chartwidth, args.chartheight),args.boundaryshade)
 
 if args.verbose or args.lessverbose :
   print('canvas generated with size ' + str(args.chartwidth) + ' x ' + str(args.chartheight))
+  print('blocksorigin = ' + str(blocksorigin))
 
 ######  compute the gradient shades
 
@@ -715,9 +768,9 @@ while len(postsbyday) > 0 :
     tempday = Image.new("RGB",(weekwidth-(2*args.boundary), args.daywidth-(2*args.boundary)),value)
     if args.verbose :
       print('day block made with size ' + str(weekwidth-(2*args.boundary)) + ' x ' + str(args.daywidth-(2*args.boundary)))
-    chartimage.paste(tempday,((workingweek*weekwidth)+args.boundary+usernamewidth,(workingday*args.daywidth)+args.boundary+monthheight))
+    chartimage.paste(tempday,((workingweek*weekwidth)+args.boundary+blocksorigin[0],(workingday*args.daywidth)+args.boundary+blocksorigin[1]))
     if args.verbose :
-      print('day block pasted in calendar at position ' + str((workingweek*weekwidth)+args.boundary+usernamewidth) + ' x ' + str((workingday*args.daywidth)+args.boundary+monthheight))
+      print('day block pasted in calendar at position ' + str((workingweek*weekwidth)+blocksorigin[0]) + ' x ' + str((workingday*args.daywidth)+blocksorigin[1]))
     if args.verbose :
       print('testing for end of month')
       print(currentday)
@@ -726,19 +779,19 @@ while len(postsbyday) > 0 :
         print('last week of month, adding separator to right')
       if workingday == 0 :
         monthseparatorline = Image.new("RGB",((2*args.boundary), args.daywidth-args.boundary),args.monthseparator)
-        chartimage.paste(monthseparatorline,(((workingweek+1)*weekwidth)-args.boundary+usernamewidth,(workingday*args.daywidth)+args.boundary+monthheight))
+        chartimage.paste(monthseparatorline,(((workingweek+1)*weekwidth)-args.boundary+blocksorigin[0],(workingday*args.daywidth)+args.boundary+blocksorigin[1]))
       else :
         monthseparatorline = Image.new("RGB",((2*args.boundary), args.daywidth),args.monthseparator)
-        chartimage.paste(monthseparatorline,(((workingweek+1)*weekwidth)-args.boundary+usernamewidth,(workingday*args.daywidth)-args.boundary+monthheight))
+        chartimage.paste(monthseparatorline,(((workingweek+1)*weekwidth)-args.boundary+blocksorigin[0],(workingday*args.daywidth)-args.boundary+blocksorigin[1]))
     if parser.parse(currentday[0]).month != (parser.parse(currentday[0])+oneday).month and workingday != 6 :
       if args.verbose :
         print('last day of month, adding separator below')
       if workingweek == 0 :
         monthseparatorline = Image.new("RGB",(weekwidth,(2*args.boundary)),args.monthseparator)
-        chartimage.paste(monthseparatorline,(((workingweek)*weekwidth)+args.boundary+usernamewidth,(((workingday+1)*args.daywidth)-args.boundary+monthheight)))
+        chartimage.paste(monthseparatorline,(((workingweek)*weekwidth)+args.boundary+blocksorigin[0],(((workingday+1)*args.daywidth)-args.boundary+blocksorigin[1])))
       else :
         monthseparatorline = Image.new("RGB",(weekwidth+(2*args.boundary),(2*args.boundary)),args.monthseparator)
-        chartimage.paste(monthseparatorline,(((workingweek)*weekwidth)-args.boundary+usernamewidth,(((workingday+1)*args.daywidth)-args.boundary+monthheight)))
+        chartimage.paste(monthseparatorline,(((workingweek)*weekwidth)-args.boundary+blocksorigin[0],(((workingday+1)*args.daywidth)-args.boundary+blocksorigin[1])))
     if ( parser.parse(currentday[0]).month != (parser.parse(currentday[0])-oneday).month ) and nomonths == False :
       if args.verbose :
         print('first day of the month, adding month name at top')
@@ -750,9 +803,9 @@ while len(postsbyday) > 0 :
         print('month name canvas made with size ' + str(monthnamesize[0]) + ' x ' + str(monthnamesize[1]))
       draw = ImageDraw.Draw(tempmonth)
       draw.text((args.boundary, args.boundary),monthname, font=monthfont, fill=args.monthtextcolour)
-      chartimage.paste(tempmonth, ((workingweek*weekwidth)+args.boundary+usernamewidth, args.boundary))
+      chartimage.paste(tempmonth, ((workingweek*weekwidth)+args.boundary+blocksorigin[0], args.boundary))
       if args.verbose :
-        print('month ' + monthname + ' pasted at position ' + str((workingweek*weekwidth)+args.boundary+usernamewidth) + ' x ' + str(args.boundary))
+        print('month ' + monthname + ' pasted at position ' + str((workingweek*weekwidth)+args.boundary+blocksorigin[0]) + ' x ' + str(args.boundary))
     workingday = workingday + 1
     if workingday == 7 :
       workingday = 0
@@ -787,7 +840,10 @@ if noname == False :
   draw = ImageDraw.Draw(usernameim)
   draw.text((args.boundary,args.boundary), usernametext, font=usernamefont, fill=args.nametextcolour)
   usernameim = usernameim.rotate(90)
-  chartimage.paste(usernameim, (args.boundary,args.chartheight-usernameheight))
+  if args.valign == 'default' :
+    chartimage.paste(usernameim, (args.boundary,args.chartheight-usernameheight))
+  elif args.valign == 'center' :
+    chartimage.paste(usernameim, (args.boundary,args.chartheight-usernameheight-largetext))
   if args.verbose :
     print('username pasted in at postition ' + str(args.boundary) + ' x ' + str(args.chartheight-usernameheight))
 
