@@ -82,8 +82,9 @@ argparser.add_argument('-id', '--userid', nargs='?', metavar='Num', default='-1'
 argparser.add_argument('-f', '--filename', nargs='?', metavar='string', default='postschart.png', help='output chart filename')
 argparser.add_argument('-wk', '--desiredweeks', type=not_negative, metavar='Num', nargs='?', default='5', help='number of weeks to chart')
 argparser.add_argument('-dw', '--daywidth', type=not_negative, metavar='Num', nargs='?', default='10', help='width of a day in the week (7 of these plus the legend and months define height of chart)')
+argparser.add_argument('-ww', '--weekwidth', type=not_negative, nargs='?', metavar='Num', default='0', help='width of a single week')
 argparser.add_argument('-ch', '--chartheight', metavar='Num', nargs='?', default='default', help='total height of chart (may cause daywidth to shrink)')
-argparser.add_argument('-cw', '--chartwidth', type=not_negative, metavar='Num', nargs='?', default='75', help='total width of chart (may be longer for legend)')
+argparser.add_argument('-cw', '--chartwidth', type=not_negative, metavar='Num', nargs='?', default='0', help='total width of chart (may be longer for legend, may cause weekwidth to shrink)')
 argparser.add_argument('-bd', '--boundary', type=not_negative, metavar='Num', nargs='?', default=1, help='boundary around days (double this between days/weeks)')
 argparser.add_argument('-bk', '--boundaryshade', nargs='?', metavar='string', default='white', help='colour for the boundaries')
 argparser.add_argument('-mf', '--monthfontfile', nargs='?', metavar='string', default='none', help='fontfile for the month text ("none" to turn off months)')
@@ -157,7 +158,11 @@ if args.argfile != 'default' :
       try : tmpargs.chartheight
       except : 1
       else : args.chartheight = tmpargs.chartheight
-    if args.chartwidth == 75 :
+    if args.weekwidth == 0 :
+      try : tmpargs.weekwidth
+      except : 1
+      else : args.weekwidth = tmpargs.weekwidth
+    if args.chartwidth == 0 :
       try : tmpargs.chartwidth
       except : 1
       else : args.chartwidth = tmpargs.chartwidth
@@ -354,7 +359,8 @@ if args.offline == False :
       r = requests.get('https://api.app.net/users/' + args.userid + '/posts', params=payload, headers=headers)
       if args.verbose :
         print('more calling for newer posts')
-      for x in r['data'] : list.append(x)
+      tmplist = r.json()['data']
+      for x in tmplist : list.append(x)
     list.reverse()
     for x in list :
       if x['id'] > newestid :
@@ -517,13 +523,14 @@ if nolegends == False :
   legendtext = 'Max Posts/Day : ' + str(maxposts) + ' | Min Posts/Day : ' + str(minposts) + ' | Max stars : ' + str(maxstars)
   legendtxtsize = legendfont.getsize(legendtext)
   legendheight = legendtxtsize[1] + 2*args.boundary + args.legendtextfudge
-  if args.chartwidth < legendtxtsize[0] + 2*args.boundary :
-    args.chartwidth = legendtxtsize[0] + 2*args.boundary
-  else :
-    hspace = args.chartwidth - legendtxtsize[0] - 2*args.boundary
 else :
   legendtxtsize = [0,0]
   legendheight = 0
+
+if args.chartwidth < legendtxtsize[0] + 2*args.boundary :
+  args.chartwidth = legendtxtsize[0] + 2*args.boundary
+else :
+  hspace = args.chartwidth - legendtxtsize[0] - 2*args.boundary
 
 if nomonths == False :
   monthfont = ImageFont.truetype(args.monthfontfile, args.monthtextpoints)
@@ -547,7 +554,9 @@ else :
 if args.halign == 'default' :
   weekwidth = (args.chartwidth-usernamewidth) / args.desiredweeks
 elif args.halign == 'center' :
-   weekwidth = (args.chartwidth-2*usernamewidth) / args.desiredweeks
+  weekwidth = (args.chartwidth-2*usernamewidth) / args.desiredweeks
+if args.weekwidth > weekwidth :
+  args.weekwidth = weekwidth
 
 if args.verbose or args.lessverbose :
   print('weekwidth calculated as ' + str(weekwidth) + ' = (' + str(args.chartwidth) + '-' + str(usernamewidth) +') /' + str(args.desiredweeks)  )
@@ -559,7 +568,10 @@ if str(args.chartheight) != 'default' :
   if args.valign == 'center' :
     largetext = max([legendheight,monthheight])
     calculatedheight = (args.daywidth*7)+2*largetext
-    blocksorigin = [usernamewidth,largetext]
+    if calculatedheight < args.chartheight :
+      blocksorigin = [usernamewidth,(largetext + (args.chartheight-calculatedheight)/2)]
+    else :
+      blocksorigin = [usernamewidth,largetext]
   elif args.valign == 'default' :
     calculatedheight = (args.daywidth*7)+legendheight+monthheight
     blocksorigin = [usernamewidth,monthheight]
@@ -843,7 +855,7 @@ if noname == False :
   if args.valign == 'default' :
     chartimage.paste(usernameim, (args.boundary,args.chartheight-usernameheight))
   elif args.valign == 'center' :
-    chartimage.paste(usernameim, (args.boundary,args.chartheight-usernameheight-largetext))
+    chartimage.paste(usernameim, (args.boundary,(args.chartheight-usernameheight)/2))
   if args.verbose :
     print('username pasted in at postition ' + str(args.boundary) + ' x ' + str(args.chartheight-usernameheight))
 
