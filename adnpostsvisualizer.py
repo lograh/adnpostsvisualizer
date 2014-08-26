@@ -437,18 +437,31 @@ if len(newtimestamps) != 0 :
   working=newtimestamps.pop()
   workingday=working.weekday()
   dayiterator = working.date()
-  if workingday < 6 :
-    currentweek.append(((dayiterator+(6*oneday)).isoformat(), 0))
-  if workingday < 5 :
-    currentweek.append(((dayiterator+(5*oneday)).isoformat(), 0))
-  if workingday < 4 :
+  if workingday <= 0 :
+    currentweek.append(((dayiterator+6*oneday).isoformat(), 0))
+    if args.verbose :
+      print('workingday < 0')
+  if workingday <= 1 :
+    currentweek.append(((dayiterator+5*oneday).isoformat(), 0))
+    if args.verbose :
+      print('workingday < 1')
+  if workingday <= 2 :
     currentweek.append(((dayiterator+(4*oneday)).isoformat(), 0))
-  if workingday < 3 :
+    if args.verbose :
+      print('workingday < 2')
+  if workingday <= 3 :
     currentweek.append(((dayiterator+(3*oneday)).isoformat(), 0))
-  if workingday < 2 :
+    if args.verbose :
+      print('workingday < 3')
+  if workingday <= 4 :
     currentweek.append(((dayiterator+(2*oneday)).isoformat(), 0))
-  if workingday < 1 :
-    currentweek.append(((dayiterator+oneday).isoformat(), 0))
+    if args.verbose :
+      print('workingday < 4')
+  if workingday <= 5 :
+    currentweek.append(((dayiterator+(oneday)).isoformat(), 0))
+    if args.verbose :
+      print('workingday < 5')
+
   daytotal = daytotal + 1
 
 if args.verbose or args.lessverbose :
