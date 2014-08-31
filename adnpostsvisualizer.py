@@ -33,14 +33,17 @@ import pickle
 
 threads = []
 
-def not_negative(string):
+def not_negative(string):  ## for testing numeric command line parameters that shouldn't be negative
+  value = string
+  if value != 'default' : ##  want to be able to allow 'default' to flag paramaters not explicitly set
       value = int(string)
       if value < 0 :
         msg = "%r is less than 0" % string
         raise argparse.ArgumentTypeError(msg)
-      return value
+  return value
+  
 
-class writecache (threading.Thread):
+class writecache (threading.Thread):  ## thread class used for writing the cache file
   def __init__(self, threadID, name):
         threading.Thread.__init__(self)
         self.threadID = threadID
@@ -80,27 +83,28 @@ class writecache (threading.Thread):
 argparser = argparse.ArgumentParser(description='Makes a picture of blocks of colour. At a minimum, you need to pass a userid (or an argfile containing one).', epilog='Uses cachefile named USERIDcache.json (will be created if missing) in current working directory')
 argparser.add_argument('-id', '--userid', nargs='?', metavar='Num', default='-1', help='ID of user to get posts from')
 argparser.add_argument('-f', '--filename', nargs='?', metavar='string', default='postschart.png', help='output chart filename')
-argparser.add_argument('-wk', '--desiredweeks', type=not_negative, metavar='Num', nargs='?', default='5', help='number of weeks to chart')
-argparser.add_argument('-dw', '--daywidth', type=not_negative, metavar='Num', nargs='?', default='10', help='width of a day in the week (7 of these plus the legend and months define height of chart)')
-argparser.add_argument('-ww', '--weekwidth', type=not_negative, nargs='?', metavar='Num', default='0', help='width of a single week')
-argparser.add_argument('-ch', '--chartheight', metavar='Num', nargs='?', default='default', help='total height of chart (may cause daywidth to shrink)')
-argparser.add_argument('-cw', '--chartwidth', type=not_negative, metavar='Num', nargs='?', default='0', help='total width of chart (may be longer for legend, may cause weekwidth to shrink)')
-argparser.add_argument('-bd', '--boundary', type=not_negative, metavar='Num', nargs='?', default=1, help='boundary around days (double this between days/weeks)')
+argparser.add_argument('-wk', '--desiredweeks', type=not_negative, metavar='Num', nargs='?', default='default', help='number of weeks to chart')
+argparser.add_argument('--lastdate', metavar='string', nargs='?', default='default', help='last date to include (default to now, desiredweeks will count back from this')
+argparser.add_argument('-dw', '--daywidth', type=not_negative, metavar='Num', nargs='?', default='default', help='width of a day in the week (7 of these plus the legend and months define height of chart)')
+argparser.add_argument('-ww', '--weekwidth', type=not_negative, nargs='?', metavar='Num', default='default', help='width of a single week')
+argparser.add_argument('-ch', '--chartheight', type=not_negative, metavar='Num', nargs='?', default='default', help='total height of chart (may cause daywidth to shrink)')
+argparser.add_argument('-cw', '--chartwidth', type=not_negative, metavar='Num', nargs='?', default='default', help='total width of chart (may be longer for legend, may cause weekwidth to shrink)')
+argparser.add_argument('-bd', '--boundary', type=not_negative, metavar='Num', nargs='?', default='default', help='boundary around days (double this between days/weeks)')
 argparser.add_argument('-bk', '--boundaryshade', nargs='?', metavar='string', default='white', help='colour for the boundaries')
 argparser.add_argument('-mf', '--monthfontfile', nargs='?', metavar='string', default='none', help='fontfile for the month text ("none" to turn off months)')
 argparser.add_argument('-lf', '--legendfontfile', nargs='?', metavar='string', default='default', help='fontfile for the legend text (defaults to monthfontfile, "none" to turn off legends)')
-argparser.add_argument('-mpts', '--monthtextpoints', type=not_negative, nargs='?', metavar='Num', default='13', help='point size for the month text (defaults to 13)')
-argparser.add_argument('-lpts', '--legendtextpoints', type=not_negative, nargs='?', metavar='Num', default='12', help='point size for the legend text (defaults to 12)')
+argparser.add_argument('-mpts', '--monthtextpoints', type=not_negative, nargs='?', metavar='Num', default='default', help='point size for the month text (defaults to 13)')
+argparser.add_argument('-lpts', '--legendtextpoints', type=not_negative, nargs='?', metavar='Num', default='default', help='point size for the legend text (defaults to 12)')
 argparser.add_argument('-mc', '--monthtextcolour', nargs='?', metavar='string', default='black', help='colour for month text (defaults to black)')
 argparser.add_argument('-lc', '--legendtextcolour', nargs='?', metavar='string', default='default', help='colour for legend text (defaults to monthtextcolour')
 argparser.add_argument('-nf', '--namefontfile', nargs='?', metavar='string', default='default', help='fontfile for the name text (defaults to monthfontfile, "none" to turn off name)')
 argparser.add_argument('-nc', '--nametextcolour', nargs='?', metavar='string', default='default', help='colour for name text (defaults to monthtextcolour')
-argparser.add_argument('-npts', '--nametextpoints', type=not_negative, nargs='?', metavar='Num', default='12', help='point size for the name text (defaults to 12)')
-argparser.add_argument('-nptf', '--nametextfudge', type=not_negative, nargs='?', metavar='Num', default='0', help='some text types just need extra padding for ascend/descenders')
-argparser.add_argument('-lptf', '--legendtextfudge', type=not_negative, nargs='?', metavar='Num', default='0', help='some text types just need extra padding for ascend/descenders')
-argparser.add_argument('-mptf', '--monthtextfudge', type=not_negative, nargs='?', metavar='Num', default='0', help='some text types just need extra padding for ascend/descenders')
+argparser.add_argument('-npts', '--nametextpoints', type=not_negative, nargs='?', metavar='Num', default='default', help='point size for the name text (defaults to 12)')
+argparser.add_argument('-nptf', '--nametextfudge', type=not_negative, nargs='?', metavar='Num', default='default', help='some text types just need extra padding for ascend/descenders')
+argparser.add_argument('-lptf', '--legendtextfudge', type=not_negative, nargs='?', metavar='Num', default='default', help='some text types just need extra padding for ascend/descenders')
+argparser.add_argument('-mptf', '--monthtextfudge', type=not_negative, nargs='?', metavar='Num', default='default', help='some text types just need extra padding for ascend/descenders')
 argparser.add_argument('-no', '--noposts', nargs='?', metavar='string', default='#fcf6f4', help='colour for days without any posts')
-argparser.add_argument('-gd', '--gradients', type=not_negative, metavar='Num', nargs='?', default='5', help='how many steps of colour')
+argparser.add_argument('-gd', '--gradients', type=not_negative, metavar='Num', nargs='?', default='default', help='how many steps of colour')
 argparser.add_argument('-gt', '--gradienttype', nargs='?', metavar='string', default='linear', help='style of gradient calculation (may override --gradients)')
 argparser.add_argument('-min', '--minshade', nargs='?', metavar='"#rrggbb"', default='#f0ccc6', help='colour for days with min posts')
 argparser.add_argument('-max', '--maxshade', nargs='?', metavar='"#rrggbb"', default='#cc5139', help='colour for days with max posts')
@@ -110,6 +114,7 @@ argparser.add_argument('--valign', nargs='?', metavar='string', default='default
 argparser.add_argument('-mo', '--monthseparator', nargs='?', metavar='string', default='default', help='colour for bars between months (defaults to boundaryshade)')
 argparser.add_argument('-v1', '--verbose',  help='verbose output (not read from argfile)', action="store_true")
 argparser.add_argument('-v0', '--lessverbose',  help='less verbose output (not read from argfile)', action="store_true")
+argparser.add_argument('--debugverbose',  help='verbosity specific to what I am working on right now (not read from argfile)', action="store_true")
 argparser.add_argument('--cachefile', nargs='?', metavar='string', default='default', help='filename for cache')
 argparser.add_argument('--mincache',  help='reduce cache usage (not read from argfile)', action="store_true")
 argparser.add_argument('--nocache',  help='disable all cache usage (not read from argfile)', action="store_true")
@@ -120,6 +125,8 @@ argparser.add_argument('--argfile', nargs='?', metavar='string', default='defaul
 argparser.add_argument('--resetargfile', help='wipe argfile and replace with whatever is from the command line (not read from argfile)', action="store_true")
 
 args = argparser.parse_args()
+if args.verbose or args.debugverbose :
+  print(args)
 
 #######################################  argfile work
 if args.argfile != 'default' :
@@ -146,11 +153,11 @@ if args.argfile != 'default' :
       try : tmpargs.filename
       except : 1
       else : args.filename = tmpargs.filename
-    if args.desiredweeks == 5  :
+    if args.desiredweeks == 'default'  :
       try : tmpargs.desiredweeks
       except : 1
       else : args.desiredweeks = tmpargs.desiredweeks
-    if args.daywidth == 10  :
+    if args.daywidth == 'default'  :
       try : tmpargs.daywidth
       except : 1
       else : args.daywidth = tmpargs.daywidth
@@ -158,15 +165,15 @@ if args.argfile != 'default' :
       try : tmpargs.chartheight
       except : 1
       else : args.chartheight = tmpargs.chartheight
-    if args.weekwidth == 0 :
+    if args.weekwidth == 'default' :
       try : tmpargs.weekwidth
       except : 1
       else : args.weekwidth = tmpargs.weekwidth
-    if args.chartwidth == 0 :
+    if args.chartwidth == 'default' :
       try : tmpargs.chartwidth
       except : 1
       else : args.chartwidth = tmpargs.chartwidth
-    if args.boundary == 1 :
+    if args.boundary == 'default' :
       try : tmpargs.boundary
       except : 1
       else : args.boundary = tmpargs.boundary
@@ -180,13 +187,13 @@ if args.argfile != 'default' :
       else : args.monthfontfile = tmpargs.monthfontfile
     if args.legendfontfile =='default'  :
       try : tmpargs.legendfontfile                    #####   this whole try: foo / except:1 / else: baz=foo pattern is the best I could find
-      except : 1                 ##########################    the problem is python throws an exception if the a nonexistent foo is ever used 
+      except : 1                 ##########################    the problem is python throws an exception if a nonexistent foo is ever used 
       else : args.legendfontfile = tmpargs.legendfontfile #    Annoying it takes so many lines, but it is what it is.
-    if args.monthtextpoints == 13 :
-      try : tmpargs.monthtextpoints
+    if args.monthtextpoints == 'default' :   ##############   Unfortunately, I can't predict what version of argfile we might have read
+      try : tmpargs.monthtextpoints          ##############    so I can't assume any of the specific values are present
       except : 1
       else : args.monthtextpoints = tmpargs.monthtextpoints
-    if args.legendtextpoints == 12  :
+    if args.legendtextpoints == 'default'  :
       try : tmpargs.legendtextpoints
       except : 1
       else : args.legendtextpoints = tmpargs.legendtextpoints
@@ -206,7 +213,7 @@ if args.argfile != 'default' :
       try : tmpargs.nametextcolour
       except : 1
       else : args.nametextcolour = tmpargs.nametextcolour
-    if args.nametextpoints == 12  :
+    if args.nametextpoints == 'default'  :
       try : tmpargs.nametextpoints
       except : 1
       else : args.nametextpoints = tmpargs.nametextpoints
@@ -214,7 +221,7 @@ if args.argfile != 'default' :
       try : tmpargs.noposts 
       except : 1
       else : args.noposts = tmpargs.noposts
-    if args.gradients == 5 :
+    if args.gradients == 'default' :
       try : tmpargs.gradients
       except : 1
       else : args.gradients = tmpargs.gradients
@@ -250,15 +257,15 @@ if args.argfile != 'default' :
       try : tmpargs.cachefile
       except : 1
       else :  args.cachefile = tmpargs.cachefile
-    if args.nametextfudge ==0 :
+    if args.nametextfudge == 'default' :
       try : tmpargs.nametextfudge
       except : 1
       else :args.nametextfudge = tmpargs.nametextfudge 
-    if args.legendtextfudge ==0 :
+    if args.legendtextfudge == 'default' :
       try : tmpargs.legendtextfudge
       except : 1
       else :args.legendtextfudge = tmpargs.legendtextfudge
-    if args.monthtextfudge ==0 :
+    if args.monthtextfudge == 'default' :
       try : tmpargs.monthtextfudge
       except : 1
       else :args.monthtextfudge = tmpargs.monthtextfudge
@@ -270,6 +277,10 @@ if args.argfile != 'default' :
       try : tmpargs.halign
       except : 1
       else :args.halign = tmpargs.halign
+    if args.lastdate == 'default' :
+      try : tmpargs.lastdate
+      except : 1
+      else :args.lastdate = tmpargs.lastdate
   if args.verbose or args.lessverbose :
     print('************************ writing out argfile')
   f = open(args.argfile, 'w+b')
@@ -290,11 +301,6 @@ if args.gradienttype == 'stdev' :
   args.gradients = 5
 elif args.gradienttype == 'highlights' :
   args.gradients = 4
-if args.chartheight != 'default' :
-  if int(args.chartheight) < 0 :
-    args.chartheight = 0
-  else :
-    args.chartheight = int(args.chartheight)
 if args.legendfontfile == 'default' :
   args.legendfontfile = args.monthfontfile
 if args.namefontfile == 'default' :
@@ -313,6 +319,36 @@ if args.shades != 'default' :
   args.shades = json.loads(args.shades)
 if args.cachefile == 'default' :
   args.cachefile = args.userid+"cache.json"
+if args.lastdate == 'now' or args.lastdate == 'default' :
+  lastdate = datetime.utcnow()
+else :
+  lastdate = parser.parse(args.lastdate)
+if args.desiredweeks == 'default'  :
+  args.desiredweeks = 5
+if args.daywidth == 'default'  :
+  args.daywidth = 10
+if args.weekwidth == 'default' :
+  args.weekwidth = 0
+if args.chartwidth == 'default' :
+  args.chartwidth = 0
+if args.boundary == 'default' :
+  args.boundary = 1
+if args.monthtextpoints == 'default' :
+  args.monthtextpoints = 13
+if args.legendtextpoints == 'default'  :
+  args.legendtextpoints = 12
+if args.nametextpoints == 'default'  :
+  args.nametextpoints = 12
+if args.nametextfudge == 'default' :
+  args.nametextfudge = 0
+if args.legendtextfudge == 'default' :
+  args.legendtextfudge = 0
+if args.monthtextfudge == 'default' :
+  args.monthtextfudge = 0
+if args.gradients == 'default' :
+  args.gradients = 5
+
+## the preceding just goes to show how much I suck at this whole "coding" thing. There has GOT to be a better way to do all that.
 
 if args.verbose or args.lessverbose :
   print(args)
@@ -322,8 +358,7 @@ if args.verbose or args.lessverbose :
 duration = timedelta(weeks=args.desiredweeks)
 sevendays = timedelta(days=7)
 oneday = timedelta(days=1)
-lasttime = datetime.utcnow()
-endtime = lasttime - duration
+endtime = lastdate - duration
 timestamps = []
 payload = { 'count': '200'}
 indivpost = {}
@@ -347,6 +382,7 @@ if args.verbose or args.lessverbose :
 if args.offline == False :
   if args.verbose or args.lessverbose :
     print('not offline, entering cache update')
+  lasttime = datetime.utcnow()
   if len(timestamps) != 0 :
     r = requests.get('https://api.app.net/users/' + args.userid + '/posts', params=payload, headers=headers)
     if args.verbose or args.lessverbose :
@@ -419,6 +455,23 @@ for x in timestamps :
     print(x)
   newtimestamps.append(x)
 
+## cut out any timestamps that don't fall in the desired range
+tmptimes = []
+if args.verbose :
+  print('checking against ', endtime, lastdate)
+for x in newtimestamps :
+  x = x.replace(tzinfo=None)
+  if endtime <= x and x <= lastdate :
+    tmptimes.append(x)
+    if args.verbose  :
+      print(x, "in the desired range, kept")
+  else :
+    if args.verbose :
+      print(x, "not in the desired range, dropped")
+newtimestamps = tmptimes
+
+if args.verbose :
+  print('kept ' + str(len(newtimestamps)))
 
 postsbyday = []
 currentweek = []
@@ -436,33 +489,32 @@ if len(newtimestamps) != 0 :
   newtimestamps.reverse()
   working=newtimestamps.pop()
   workingday=working.weekday()
+  daytotal = daytotal + 1
   dayiterator = working.date()
   if workingday <= 0 :
     currentweek.append(((dayiterator+6*oneday).isoformat(), 0))
     if args.verbose :
-      print('workingday < 0')
+      print('workingday <= 0')
   if workingday <= 1 :
     currentweek.append(((dayiterator+5*oneday).isoformat(), 0))
     if args.verbose :
-      print('workingday < 1')
+      print('workingday <= 1')
   if workingday <= 2 :
     currentweek.append(((dayiterator+(4*oneday)).isoformat(), 0))
     if args.verbose :
-      print('workingday < 2')
+      print('workingday <= 2')
   if workingday <= 3 :
     currentweek.append(((dayiterator+(3*oneday)).isoformat(), 0))
     if args.verbose :
-      print('workingday < 3')
+      print('workingday <= 3')
   if workingday <= 4 :
     currentweek.append(((dayiterator+(2*oneday)).isoformat(), 0))
     if args.verbose :
-      print('workingday < 4')
+      print('workingday <= 4')
   if workingday <= 5 :
     currentweek.append(((dayiterator+(oneday)).isoformat(), 0))
     if args.verbose :
-      print('workingday < 5')
-
-  daytotal = daytotal + 1
+      print('workingday <= 5')
 
 if args.verbose or args.lessverbose :
   print('************************ counting posts per day')
@@ -505,12 +557,15 @@ while len(newtimestamps) > 0 :
         print('appended to count data')
       currentweek = []
 
+## right about here there's a bug. If a user has only one post in the range, we will have gathered up 0. It gets popped up at "filling days with 0"
+## but then the next block is "while there's more to get" which would fail in a single-post case. so it never gets saved.
+## even a second post would fix this, but really I should check for that case better.
+
 if args.verbose or args.lessverbose :
   print('Max Posts ' + str(maxposts) + '. Min Posts ' + str(minposts) + '. Number of weeks ' + str(len(postsbyday)) + '.')
 
-
-
 ############################## find stars
+### bug here : this counts stars for all posts, not just those in the desired range. fixing this will require quite a bit of work. :(
 stars = []
 for x in timestamps :
   if args.verbose :
@@ -581,7 +636,7 @@ if str(args.chartheight) != 'default' :
   if args.valign == 'center' :
     largetext = max([legendheight,monthheight])
     calculatedheight = (args.daywidth*7)+2*largetext
-    if calculatedheight < args.chartheight :
+    if calculatedheight <= args.chartheight :
       blocksorigin = [usernamewidth,(largetext + (args.chartheight-calculatedheight)/2)]
     else :
       blocksorigin = [usernamewidth,largetext]
@@ -593,8 +648,8 @@ if str(args.chartheight) != 'default' :
       weekheight = args.chartheight - 2*largetext
     elif args.valign == 'default' :
       weekheight = args.chartheight - legendheight - monthheight
-    if weekheight/7 <= 1 :
-      args.daywidth = 1
+    if weekheight/7 <= 1+2*args.boundary :
+      args.daywidth = 1+2*args.boundary
     else :
       args.daywidth = int(round(weekheight/7))
   if args.verbose :
@@ -611,8 +666,9 @@ else :
 if usernameheight != 0 and args.chartheight < usernameheight :
   args.chartheight = usernameheight
   if args.valign == 'center' :
-    blocksorigin = args.chartheight-largetext
-
+    blocksorigin = [usernamewidth,largetext]
+  else :
+    blocksorigin = [usernamewidth, monthheight]
 
 chartimage = Image.new("RGB",(args.chartwidth, args.chartheight),args.boundaryshade)
 
@@ -621,7 +677,6 @@ if args.verbose or args.lessverbose :
   print('blocksorigin = ' + str(blocksorigin))
 
 ######  compute the gradient shades
-
 
 maxshadeR = int(args.maxshade[1:3],16)
 maxshadeG = int(args.maxshade[3:5],16)
@@ -765,13 +820,6 @@ if args.verbose or args.lessverbose :
 if args.verbose or args.lessverbose :
   print('trimming extra weeks from end')
 
-####### Dump a few extra weeks that may have snuck in earlier
-while len(postsbyday) > args.desiredweeks :
-  trash = postsbyday.pop()
-  if args.verbose :
-    print(trash)
-    print('dropped')
-
 if args.verbose or args.lessverbose :
   print('assigning colours to days and building chart')
 
@@ -817,18 +865,18 @@ while len(postsbyday) > 0 :
       else :
         monthseparatorline = Image.new("RGB",(weekwidth+(2*args.boundary),(2*args.boundary)),args.monthseparator)
         chartimage.paste(monthseparatorline,(((workingweek)*weekwidth)-args.boundary+blocksorigin[0],(((workingday+1)*args.daywidth)-args.boundary+blocksorigin[1])))
-    if ( parser.parse(currentday[0]).month != (parser.parse(currentday[0])-oneday).month ) and nomonths == False :
+    if ( parser.parse(currentday[0]).month != (parser.parse(currentday[0])-oneday).month ) and nomonths == False and workingweek != args.desiredweeks - 1 :
       if args.verbose :
         print('first day of the month, adding month name at top')
       monthname = parser.parse(currentday[0]).strftime('%b')
       monthnamesize = monthfont.getsize(monthname)
-      monthnamesize = (monthnamesize[0] + 2*args.boundary, monthnamesize[1] + 2*args.boundary)
+      monthnamesize = (monthnamesize[0] + 2*args.boundary, monthnamesize[1] + 2*args.boundary + args.monthtextfudge)
       tempmonth = Image.new('RGB', monthnamesize, args.boundaryshade)
       if args.verbose :
         print('month name canvas made with size ' + str(monthnamesize[0]) + ' x ' + str(monthnamesize[1]))
       draw = ImageDraw.Draw(tempmonth)
       draw.text((args.boundary, args.boundary),monthname, font=monthfont, fill=args.monthtextcolour)
-      chartimage.paste(tempmonth, ((workingweek*weekwidth)+args.boundary+blocksorigin[0], args.boundary))
+      chartimage.paste(tempmonth, ((workingweek*weekwidth)+args.boundary+blocksorigin[0], blocksorigin[1]-monthheight))
       if args.verbose :
         print('month ' + monthname + ' pasted at position ' + str((workingweek*weekwidth)+args.boundary+blocksorigin[0]) + ' x ' + str(args.boundary))
     workingday = workingday + 1
