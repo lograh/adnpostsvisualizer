@@ -633,6 +633,7 @@ if args.verbose :
   print('adjusting heights')
 
 if str(args.chartheight) != 'default' :
+  args.chartheight = int(args.chartheight)
   if args.valign == 'center' :
     largetext = max([legendheight,monthheight])
     calculatedheight = (args.daywidth*7)+2*largetext
